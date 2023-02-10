@@ -151,9 +151,6 @@ public class AnalyseurLexical {
 
     public static T_UNILEX RECO_SYMB() throws IOException {
         switch (CARLU) {
-            case ',':
-                LIRE_CAR();
-                return T_UNILEX.virg;
             case ';':
                // CARLU = (char) bf.read();
                 LIRE_CAR();
@@ -173,11 +170,13 @@ public class AnalyseurLexical {
                     LIRE_CAR();
                     return T_UNILEX.infe;
                 }
-                if (CARLU == '>'){
+                else if (CARLU == '>'){
                     LIRE_CAR();
                     return T_UNILEX.diff;
                 }
-                return T_UNILEX.inf;
+                else {
+                    return T_UNILEX.inf;
+                }
             case '>':
                 LIRE_CAR();
                 if (CARLU == '=') {
@@ -207,16 +206,6 @@ public class AnalyseurLexical {
                     return T_UNILEX.aff;
                 }
                 return T_UNILEX.deuxspts;
-                /*
-            case '!':
-                LIRE_CAR();
-                if (CARLU == '=') {
-                    LIRE_CAR();
-                    return T_UNILEX.diff;
-                }
-
-                 */
-                //break;
             default:
                 break;
         }
@@ -298,8 +287,13 @@ public class AnalyseurLexical {
     }
 
 
-    public static void TERMINER() throws IOException {
-        bf.close();
+    public static void TERMINER() {
+       try {
+           bf = new BufferedReader(new FileReader(SOURCE));
+           bf.close();
+       } catch (IOException e) {
+           e.printStackTrace();
+       }
     }
 
 

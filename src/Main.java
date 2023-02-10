@@ -13,7 +13,9 @@ public class Main {
             if (token == AnalyseurLexical.T_UNILEX.fin_fichier) {
                 break;
             }
-            System.out.println("Token: " + token.toString());
+            if (token != null){
+                System.out.println("Token: " + token);
+            }
         }
 
         AnalyseurLexical.TERMINER();
