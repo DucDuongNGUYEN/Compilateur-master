@@ -1,21 +1,14 @@
-import java.io.IOException;
-
 public class Main {
 
-    public static void main(String[] args) throws IOException {
-        AnalyseurLexical.INITIALISER();
-
-        // Lecture du premier caractère
-        AnalyseurLexical.LIRE_CAR();
-
+    public static void main(String[] args) throws Exception {
+        AnalyseurLexical analyseurLexical = new AnalyseurLexical();
+        analyseurLexical.INITIALISER();
+        //System.out.println("hh'hh'h");
+        analyseurLexical.LIRE_CAR();
         while (true) {
-            AnalyseurLexical.T_UNILEX token = AnalyseurLexical.ANALEX();
-            if (token == AnalyseurLexical.T_UNILEX.fin_fichier) {
-                break;
-            }
-            System.out.println("Token: " + token.toString());
+            AnalyseurLexical.T_UNILEX token = analyseurLexical.ANALEX();
+            System.out.println(token + " ");
         }
-
-        AnalyseurLexical.TERMINER();
+        //analyseurLexical.TERMINER();
     }
 }
