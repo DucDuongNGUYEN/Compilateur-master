@@ -1,35 +1,38 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 
 class TableIdentificateurs {
-    ArrayList<Identificateur> table;
+    private static final int NB_IDENT_MAX = 100;
+    private static HashMap<String, T_ENREG_IDENT> identTab = new HashMap<>(NB_IDENT_MAX);
 
-    TableIdentificateurs() {
-        table = new ArrayList<Identificateur>();
+    public boolean CHERCHER(String nom) {
+        return identTab.containsKey(nom);
     }
 
-    int chercher(String nom) {
-        for (int i = 0; i < table.size(); i++) {
-            if (table.get(i).nom.equals(nom)) {
-                return i;
-            }
-        }
-        return -1;
+    public void INSERER(String nom, T_ENREG_IDENT gerne) {
+        identTab.put(nom,gerne);
     }
 
-    int inserer(String nom, int genre) {
-        int i = chercher(nom);
-        if (i == -1) {
-            table.add(new Identificateur(nom, genre));
-            i = table.size() - 1;
-        }
-        return i;
+    public T_ENREG_IDENT getIdentificateur(String nom){
+        return identTab.get(nom);
     }
 
-    void afficherTable() {
+    public HashMap<String, T_ENREG_IDENT> getIdentTab() {
+        return identTab;
+    }
+
+    void AFFICHE_TABLE_IDENT() {
         System.out.println("Table des identificateurs :");
-        System.out.println("Indice | Nom | Genre");
-        for (int i = 0; i < table.size(); i++) {
-            System.out.println(i + " | " + table.get(i).nom + " | " + table.get(i).genre);
+        System.out.println("Nom | Genre | typ");
+        for (String i : identTab.keySet()) {
+            System.out.print(i + " | " + identTab.get(i).toString() + " | ");
+            if(identTab.get(i) instanceof Variable) {
+                System.out.print(((Variable) identTab.get(i)).getTypv() + " Adresse: ");
+                System.out.println(((Variable) identTab.get(i)).getAdrv());
+            }
+            if(identTab.get(i) instanceof Constante)
+                System.out.println(((Constante) identTab.get(i)).getTypc());
         }
+        System.out.println();
     }
 }

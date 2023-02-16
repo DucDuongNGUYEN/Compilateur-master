@@ -1,18 +1,9 @@
-class T_ENREG_IDENT {
-    private String nom;
-    private int genre;
+abstract class T_ENREG_IDENT {
+    private char[] nom = new char[Compilateur.LONG_MAX_IDENT];
 
-    public T_ENREG_IDENT(String nom, int genre) {
-        this.nom = nom;
-        this.genre = genre;
+    public T_ENREG_IDENT(String nom){
+        this.nom = nom.toCharArray();
     }
 
-    public String getNom() {
-        return nom;
-    }
-
-    public int getGenre() {
-        return genre;
-    }
+    public abstract String toString();
 }
-

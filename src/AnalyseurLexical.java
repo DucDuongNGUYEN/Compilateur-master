@@ -1,217 +1,162 @@
-import java.io.*;
+import java.io.FileNotFoundException;
 
 public class AnalyseurLexical {
-
-    public AnalyseurLexical() throws FileNotFoundException {
+    private final Compilateur compilateur;
+    public AnalyseurLexical(Compilateur compilateur) throws FileNotFoundException {
+        this.compilateur = compilateur;
     }
 
-    enum T_UNILEX {
-        motcle, ident, ent, ch, virg, ptvirg, point, deuxspts, parouv, parfer, inf, sup, eg,
-        plus, moins, mult, divi, infe, supe, diff, aff
-    }
-
-    static final int LONG_MAX_IDENT = 20;
-    static final int LONG_MAX_CHAINE = 50;
-    static final int NB_MOTS_RESERVES = 7;
-    static final int MAXINT = 32767;
-
-    String SOURCE;
-    Character CARLU;
-    int NOMBRE;
-    String CHAINE;
-    int NUM_LIGNE = 0;
-    String[] TABLE_MOTS_RESERVES = new String[NB_MOTS_RESERVES];
-
-    BufferedReader bf;
-
-    public void ERREUR(int n) {
-        switch (n) {
-            case 1:
-                System.out.println("fin de fichier atteinte _ ligne n°" + NUM_LIGNE);
-                System.exit(0);
-            case 2:
-                System.out.println("dépassé la valeur maximale");
-                System.exit(0);
-            case 3:
-                System.out.println("dépassé la longueur maximale");
-                System.exit(0);
+    public void LIRE_CAR() throws Exception {
+        compilateur.CARLU = compilateur.bf.read();
+        if (compilateur.CARLU == -1) {
+            compilateur.ERREUR(1);
+            return;
         }
-    }
-
-    public void LIRE_CAR() throws IOException {
-        int c = bf.read();
-        if (c == -1)
-            ERREUR(1);
-
-        CARLU = (char) c;
-
-        if (CARLU == '\n')
-            NUM_LIGNE++;
+        if (compilateur.CARLU == '\n') {
+            compilateur.NUM_LIGNE++;
+        }
     }
 
     public void SAUTER_SEPARATEURS() throws Exception {
-        while (CARLU == ' ' || CARLU == '\t' || CARLU == '\n' || CARLU == '\r') {
+        while(compilateur.CARLU == ' ' || compilateur.CARLU == '\t' || compilateur.CARLU == '\n' || compilateur.CARLU == '\r') {
             LIRE_CAR();
         }
 
-        if (CARLU == '{') {
-            while (CARLU != '}')
+        if (compilateur.CARLU == '{') {
+            //commentaires imbriqués
+            int count = 1;
+            while (count > 0) {
                 LIRE_CAR();
+                if (compilateur.CARLU == '{')
+                    count++;
+                if (compilateur.CARLU == '}')
+                    count--;
+            }
             LIRE_CAR();
             SAUTER_SEPARATEURS();
         }
     }
 
-
-    public T_UNILEX RECO_ENTIER() throws IOException {
+    public T_UNILEX RECO_ENTIER() throws Exception {
         int n = 0;
-        while (Character.isDigit(CARLU)) {
-            n = n * 10 + (CARLU - '0');
-            if (n > MAXINT) {
-                ERREUR(2);
+        while (Character.isDigit((char) compilateur.CARLU)) {
+            n = n * 10 + ((char)compilateur.CARLU - '0');
+            if (n >Compilateur. MAXINT) {
+                compilateur.ERREUR(2);
             }
             LIRE_CAR();
         }
-        NOMBRE = n;
-        System.out.print(NOMBRE + " ");
+        if(Character.isAlphabetic((char) compilateur.CARLU))
+            compilateur.ERREUR(4);
+        compilateur.NOMBRE = n;
+
+        //System.out.print(compilateur.NOMBRE + " >> ");
         return T_UNILEX.ent;
     }
 
-    public T_UNILEX RECO_CHAINE() throws IOException {
-
-        CHAINE = "";
+    public T_UNILEX RECO_CHAINE() throws Exception {
+        //chaines imbriquées
         LIRE_CAR();
-        while (CARLU != '\'') {
-            CHAINE += CARLU;
+        while (compilateur.CARLU != '\'') {
+            compilateur.CHAINE += (char)compilateur.CARLU;
             LIRE_CAR();
         }
-        if (CHAINE.length() >= LONG_MAX_CHAINE)
-            ERREUR(3);
         LIRE_CAR();
-        System.out.print(CHAINE + " >> ");
-        return T_UNILEX.ch;
-
-
-        /*
-        CHAINE = "";
-        if(CARLU == '\'') {
-            while (CARLU != '\'') {
-                LIRE_CAR();
-                CHAINE += CARLU;
-            }
+        if(compilateur.CARLU == '\'') {
+            compilateur.CHAINE += (char)compilateur.CARLU;
+            return RECO_CHAINE();
         }
-        LIRE_CAR();
-        if(CARLU == '\'')
-            RECO_CHAINE();
-        if(CHAINE.length() > LONG_MAX_CHAINE){
-            ERREUR(3);
-        }
-        System.out.println(CHAINE);
-        return T_UNILEX.ch;
 
-         */
+        if(compilateur.CHAINE.length() > Compilateur.LONG_MAX_CHAINE)
+            compilateur.ERREUR(3);
+
+        //System.out.print(compilateur.CHAINE + " >> ");
+        return T_UNILEX.ch;
     }
 
-
-    public T_UNILEX RECO_IDENT_OU_MOT_RESERVE() throws IOException {
-        CHAINE = "";
-        if (Character.isAlphabetic(CARLU)) {
-            while (Character.isLetterOrDigit(CARLU) || CARLU == '_') {
-                if (CHAINE.length() < LONG_MAX_IDENT) {
-                    CHAINE += CARLU;
-
-                }
-                LIRE_CAR();
+    public T_UNILEX RECO_IDENT_OU_MOT_RESERVE() throws Exception {
+        compilateur.CHAINE = "";
+        while (Character.isLetterOrDigit((char) compilateur.CARLU) || (char) compilateur.CARLU == '_') {
+            if (compilateur.CHAINE.length() < Compilateur.LONG_MAX_IDENT) {
+                compilateur.CHAINE += (char)compilateur.CARLU;
             }
-
+            LIRE_CAR();
         }
-        //CHAINE = CHAINE.toUpperCase();
-        System.out.print(CHAINE + " >> ");
-        return EST_UN_MOT_RESERVE(CHAINE) ? T_UNILEX.motcle : T_UNILEX.ident;
+        compilateur.CHAINE = compilateur.CHAINE.toUpperCase();
+
+        //System.out.print(compilateur.CHAINE + " >> ");
+        return EST_UN_MOT_RESERVE(compilateur.CHAINE)? T_UNILEX.motcle : T_UNILEX.ident;
     }
 
-
-    boolean EST_UN_MOT_RESERVE(String chaine) {
-        for (String motCle : TABLE_MOTS_RESERVES) {
-            if (motCle.equals(chaine)) {
+    public boolean EST_UN_MOT_RESERVE(String chaine) {
+        for (String motCle : compilateur.TABLE_MOTS_RESERVES) {
+            if (motCle.equals(chaine))
                 return true;
-            }
         }
         return false;
     }
-
-    /*
-    static boolean EST_UN_MOT_RESERVE(String chaine) {
-        int i = 0;
-        int j = NB_MOTS_RESERVES - 1;
-        while (i <= j) {
-            int k = (i + j) / 2;
-            int compareResult = chaine.compareTo(TABLE_MOTS_RESERVES[k]);
-            if (compareResult == 0) {
-                return true;
-            } else if (compareResult < 0) {
-                j = k - 1;
-            } else {
-                i = k + 1;
-            }
-        }
-        return false;
-    }
-     */
-
 
     public T_UNILEX RECO_SYMB() throws Exception {
-        System.out.print(CARLU + " >> ");
-        switch (CARLU) {
+        switch (compilateur.CARLU) {
             case ';':
-                LIRE_CAR();
+                //System.out.print((char) compilateur.CARLU + " >> " + T_UNILEX.ptvirg);
                 return T_UNILEX.ptvirg;
+            case ',':
+                //System.out.print((char) compilateur.CARLU + " >> ");
+                return T_UNILEX.virg;
             case '.':
-                LIRE_CAR();
+                //System.out.print((char) compilateur.CARLU + " >> ");
                 return T_UNILEX.point;
             case '(':
-                LIRE_CAR();
+                //System.out.print((char) compilateur.CARLU + " >> ");
                 return T_UNILEX.parouv;
             case ')':
-                LIRE_CAR();
+                //System.out.print((char) compilateur.CARLU + " >> ");
                 return T_UNILEX.parfer;
             case '<':
+                //System.out.print((char) compilateur.CARLU + " >> ");
                 LIRE_CAR();
-                if (CARLU == '=') {
-                    LIRE_CAR();
+                if (compilateur.CARLU == '=') {
+                    //System.out.print((char) compilateur.CARLU + " >> ");
                     return T_UNILEX.infe;
-                } else if (CARLU == '>') {
-                    LIRE_CAR();
+                }
+                else if (compilateur.CARLU == '>'){
+                    //System.out.print((char) compilateur.CARLU + " >> ");
                     return T_UNILEX.diff;
-                } else {
+                }
+                else {
+                    //System.out.print(" >> ");
                     return T_UNILEX.inf;
                 }
             case '>':
+                //System.out.print((char) compilateur.CARLU + " >> ");
                 LIRE_CAR();
-                if (CARLU == '=') {
-                    LIRE_CAR();
+                if (compilateur.CARLU == '=') {
+                    //System.out.print((char) compilateur.CARLU + " >> ");
                     return T_UNILEX.supe;
                 }
+                //System.out.print(" >> ");
                 return T_UNILEX.sup;
             case '=':
-                LIRE_CAR();
+                //System.out.print((char) compilateur.CARLU + " >> ");
                 return T_UNILEX.eg;
             case '+':
-                LIRE_CAR();
+                //System.out.print((char) compilateur.CARLU + " >> ");
                 return T_UNILEX.plus;
             case '-':
-                LIRE_CAR();
+                //System.out.print((char) compilateur.CARLU + " >> ");
                 return T_UNILEX.moins;
             case '*':
-                LIRE_CAR();
+                //System.out.print((char) compilateur.CARLU + " >> ");
                 return T_UNILEX.mult;
             case '/':
-                LIRE_CAR();
+                //System.out.print((char) compilateur.CARLU + " >> ");
                 return T_UNILEX.divi;
             case ':':
+                //System.out.print((char) compilateur.CARLU + " >> ");
                 LIRE_CAR();
-                if (CARLU == '=') {
-                    LIRE_CAR();
+                if (compilateur.CARLU == '=') {
+                    //System.out.print((char) compilateur.CARLU + " >> ");
                     return T_UNILEX.aff;
                 }
                 return T_UNILEX.deuxspts;
@@ -219,38 +164,89 @@ public class AnalyseurLexical {
         return null;
     }
 
+    public void AFFICHER(T_UNILEX t_unilex){
+        switch (t_unilex){
+            case ent:
+                System.out.println(compilateur.NOMBRE + " >> " + t_unilex);
+                break;
+            case ch:
+            case ident:
+            case motcle:
+                System.out.println(compilateur.CHAINE + " >> " + t_unilex);
+                break;
+            case virg:
+                System.out.println(", >> " + t_unilex);
+                break;
+            case ptvirg:
+                System.out.println("; >> " + t_unilex);
+                break;
+            case point:
+                System.out.println(". >> " + t_unilex);
+                break;
+            case parouv:
+                System.out.println("( >> " + t_unilex);
+                break;
+            case parfer:
+                System.out.println(") >> " + t_unilex);
+                break;
+            case inf:
+                System.out.println("< >> " + t_unilex);
+                break;
+            case infe:
+                System.out.println("<= >> " + t_unilex);
+                break;
+            case diff:
+                System.out.println("<> >> " + t_unilex);
+                break;
+            case sup:
+                System.out.println("> >> " + t_unilex);
+                break;
+            case supe:
+                System.out.println(">= >> " + t_unilex);
+                break;
+            case plus:
+                System.out.println("+ >> " + t_unilex);
+                break;
+            case moins:
+                System.out.println("- >> " + t_unilex);
+                break;
+            case mult:
+                System.out.println("* >> " + t_unilex);
+                break;
+            case divi:
+                System.out.println("/ >> " + t_unilex);
+                break;
+            case eg:
+                System.out.println("= >> " + t_unilex);
+                break;
+            case aff:
+                System.out.println(":= >> " + t_unilex);
+                break;
+            case deuxspts:
+                System.out.println(": >> " + t_unilex);
+                break;
+            default:
+                System.out.println(" >> " + t_unilex);
+                break;
+        }
+    }
+
     public T_UNILEX ANALEX() throws Exception {
+        compilateur.CHAINE = "";
         // saute les séparateurs et commentaires
         SAUTER_SEPARATEURS();
 
         // essaie de reconnaître une unité lexicale
-        if (Character.isDigit(CARLU))
+        if (Character.isDigit((char) compilateur.CARLU))
             return RECO_ENTIER();
-        if (CARLU == '\'')
+        if (compilateur.CARLU == '\'')
             return RECO_CHAINE();
-        if (Character.isLetter(CARLU))
+        if (Character.isLetter((char) compilateur.CARLU))
             return RECO_IDENT_OU_MOT_RESERVE();
-        return RECO_SYMB();
+
+        T_UNILEX t_unilex =  RECO_SYMB();
+        LIRE_CAR();
+        return t_unilex;
     }
-
-
-    public void INITIALISER() {
-        NUM_LIGNE = 0;
-        SOURCE = "C:\\LICENCE 3\\SS6\\Compilation\\Compilateur-master\\src\\test1.pas";
-        try {
-            bf = new BufferedReader(new FileReader(SOURCE));
-        } catch (FileNotFoundException e) {
-            System.out.println("Le fichier source n'a pas été trouvé");
-            System.exit(0);
-        }
-        TABLE_MOTS_RESERVES = new String[]{"PROGRAMME", "DEBUT", "FIN", "CONST", "VAR", "ECRIRE", "LIRE"};
-    }
-
-
-    public void TERMINER() throws IOException {
-        bf.close();
-    }
-
 
 }
-
